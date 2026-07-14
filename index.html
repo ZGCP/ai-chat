@@ -1,468 +1,449 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#0f0f23">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>AI Chat</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-:root{--bg:#0f0f23;--bg2:#1a1a3e;--bg3:#12122a;--border:#2a2a5e;--border2:#3a3a6e;--primary:#667eea;--primary2:#764ba2;--accent:#a78bfa;--success:#10b981;--text:#e0e0e0;--text2:#888;--danger:#ef4444;--radius:14px;--radius-sm:10px}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--text);height:100vh;height:100dvh;display:flex;flex-direction:column;max-width:800px;margin:0 auto;overflow:hidden}
-.header{padding:max(12px, env(safe-area-inset-top)) 16px 12px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.header h1{font-size:17px;color:var(--accent);font-weight:600;display:flex;align-items:center;gap:7px}
-select{padding:6px 8px;background:var(--bg);color:var(--text);border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:12px;cursor:pointer;max-width:120px;appearance:auto}
-.logout-btn{font-size:12px;color:var(--text2);cursor:pointer;background:none;border:none;padding:6px 8px;border-radius:6px}
-.logout-btn:active{background:var(--border)}
-.status-bar{text-align:center;font-size:11px;color:var(--text2);padding:3px 0;min-height:16px;flex-shrink:0;transition:color .2s}
-.status-bar.active{color:var(--accent)}
-.login-screen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:20px;padding-bottom:max(20px, env(safe-area-inset-bottom))}
-.login-logo{width:60px;height:60px;background:linear-gradient(135deg,var(--primary),var(--primary2));border-radius:18px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 32px rgba(102,126,234,.35)}
-.login-screen h2{font-size:24px;color:var(--accent);font-weight:700}
-.login-screen .subtitle{font-size:14px;color:var(--text2);margin-top:-12px}
-.login-screen input{padding:14px 18px;font-size:16px;background:var(--bg2);border:2px solid var(--border2);border-radius:var(--radius);color:var(--text);outline:none;width:100%;max-width:320px;text-align:center;transition:border-color .2s}
-.login-screen input:focus{border-color:var(--primary)}
-.login-screen input::placeholder{color:#555}
-.login-screen .login-btn{padding:14px 40px;font-size:16px;background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;border:none;border-radius:var(--radius);cursor:pointer;font-weight:600;width:100%;max-width:320px;transition:opacity .2s;box-shadow:0 4px 16px rgba(102,126,234,.3)}
-.login-screen .login-btn:active{opacity:.85}
-.login-error{color:var(--danger);font-size:13px;display:none;height:20px}
-.chat-area{flex:1;display:flex;flex-direction:column;overflow:hidden;padding-bottom:env(safe-area-inset-bottom)}
-.messages{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 12px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth}
-.msg{display:flex;gap:9px;max-width:90%;animation:fadeIn .2s ease}
-.msg.user{align-self:flex-end;flex-direction:row-reverse}
-@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-.msg .avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.msg.user .avatar{background:linear-gradient(135deg,var(--primary),var(--primary2))}
-.msg.bot .avatar{background:linear-gradient(135deg,var(--success),#059669)}
-.msg .bubble{padding:10px 14px;border-radius:var(--radius);line-height:1.65;font-size:15px;word-break:break-word;white-space:pre-wrap;touch-action:pan-y}
-.msg.user .bubble{background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;border-bottom-right-radius:4px;max-width:calc(100% - 34px)}
-.msg.bot .bubble{background:var(--bg2);color:var(--text);border-bottom-left-radius:4px;min-height:44px;border:1px solid var(--border)}
-.msg.error .bubble{background:#2d1212;color:var(--danger);border:1px solid #7f1d1d}
-.msg.thinking .bubble{background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:12px 16px;min-height:58px;border-bottom-left-radius:4px}
-.think-dots{display:inline-flex;align-items:center;gap:6px}
-.think-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:jump 1.4s ease-in-out infinite}
-.think-dot:nth-child(2){animation-delay:.15s}
-.think-dot:nth-child(3){animation-delay:.3s}
-@keyframes jump{0%,60%,100%{transform:translateY(0);opacity:.35}30%{transform:translateY(-9px);opacity:1}}
-.think-label{font-size:13px;color:var(--text2);margin-left:2px}
-.input-area{flex-shrink:0;padding:10px 12px max(10px, env(safe-area-inset-bottom));background:var(--bg2);border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end}
-textarea{flex:1;padding:11px 14px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-size:16px;resize:none;outline:none;line-height:1.5;max-height:120px;font-family:inherit;transition:border-color .2s;-webkit-appearance:none}
-textarea:focus{border-color:var(--primary)}
-textarea::placeholder{color:#555}
-.send-btn{padding:11px 18px;background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;cursor:pointer;font-weight:600;flex-shrink:0;transition:opacity .2s,transform .1s;box-shadow:0 2px 8px rgba(102,126,234,.3)}
-.send-btn:active{transform:scale(.96);opacity:.85}
-.send-btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
-.send-btn.cancel{background:var(--danger);box-shadow:0 2px 8px rgba(239,68,68,.3)}
-.md-content{font-size:15px;line-height:1.72;color:var(--text)}
-.md-content h1,.md-content h2,.md-content h3{color:var(--accent);margin:10px 0 5px;font-weight:700}
-.md-content h1{font-size:19px;border-bottom:1px solid var(--border);padding-bottom:5px}
-.md-content h2{font-size:17px}.md-content h3{font-size:15px}
-.md-content p{margin:5px 0}
-.md-content strong{color:#fff;font-weight:700}
-.md-content em{color:#c4b5fd;font-style:italic}
-.md-content code{background:#12122a;color:#fbbf24;padding:2px 6px;border-radius:4px;font-size:13px;font-family:"SF Mono",Consolas,monospace}
-.md-content pre{background:#0d0d20;border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin:10px 0;overflow-x:auto;-webkit-overflow-scrolling:touch}
-.md-content pre code{background:none;color:var(--text);padding:0;font-size:13px;line-height:1.6}
-.md-content ul,.md-content ol{margin:6px 0;padding-left:22px}
-.md-content li{margin:3px 0}
-.md-content li::marker{color:var(--accent)}
-.md-content blockquote{border-left:3px solid var(--primary);padding-left:12px;color:var(--text2);margin:8px 0;font-style:italic}
-.md-content a{color:#818cf8}
-.md-content table{width:100%;margin:10px 0;border-collapse:collapse;font-size:14px;overflow-x:auto;display:block}
-.md-content th,.md-content td{border:1px solid var(--border2);padding:7px 10px;text-align:left}
-.md-content th{background:var(--bg);color:var(--accent);font-weight:600}
-.md-content hr{border:none;border-top:1px solid var(--border);margin:14px 0}
-@media(max-width:480px){.messages{padding:10px 8px;gap:10px}.msg{max-width:95%}.msg .bubble{font-size:14px;padding:9px 12px}.msg .avatar{width:30px;height:30px}.header h1{font-size:15px}select{max-width:100px;font-size:11px}.login-screen h2{font-size:20px}}
-@media(min-width:600px){.msg{max-width:78%}}
-</style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0f0f23" />
+    <title>AI Chat</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+        :root{--bg:#0f0f23;--bg2:#1a1a3e;--border:#2a2a5e;--border2:#3a3a6e;--primary:#667eea;--primary2:#764ba2;--accent:#a78bfa;--success:#10b981;--text:#e0e0e0;--text2:#888;--danger:#ef4444;--radius:14px;--radius-sm:10px}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--text);height:100vh;height:100dvh;display:flex;flex-direction:column;max-width:800px;margin:0 auto;overflow:hidden}
+        .header{padding:max(12px, env(safe-area-inset-top)) 16px 12px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+        .header h1{font-size:17px;color:var(--accent);font-weight:600;display:flex;align-items:center;gap:7px}
+        select{padding:6px 8px;background:var(--bg);color:var(--text);border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:12px;cursor:pointer;max-width:200px;appearance:auto;flex-shrink:0}
+        .logout-btn{font-size:12px;color:var(--text2);cursor:pointer;background:none;border:none;padding:6px 8px;border-radius:6px}
+        .logout-btn:active{background:var(--border)}
+        .status-bar{text-align:center;font-size:11px;color:var(--text2);padding:3px 0;min-height:16px;flex-shrink:0}
+        .status-bar.active{color:var(--accent)}
+        .login-screen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:20px;padding-bottom:max(20px, env(safe-area-inset-bottom))}
+        .login-logo{width:60px;height:60px;background:linear-gradient(135deg,var(--primary),var(--primary2));border-radius:18px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 32px rgba(102,126,234,.35)}
+        .login-screen h2{font-size:24px;color:var(--accent);font-weight:700}
+        .login-screen .subtitle{font-size:14px;color:var(--text2);margin-top:-12px}
+        .login-screen input{padding:14px 18px;font-size:16px;background:var(--bg2);border:2px solid var(--border2);border-radius:var(--radius);color:var(--text);outline:none;width:100%;max-width:320px;text-align:center}
+        .login-screen input:focus{border-color:var(--primary)}
+        .login-screen .login-btn{padding:14px 40px;font-size:16px;background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;border:none;border-radius:var(--radius);cursor:pointer;font-weight:600;width:100%;max-width:320px;box-shadow:0 4px 16px rgba(102,126,234,.3)}
+        .login-error{color:var(--danger);font-size:13px;display:none;height:20px}
+        .chat-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+        .messages{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 12px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth}
+        .msg{display:flex;gap:9px;max-width:90%;animation:fadeIn .2s ease}
+        .msg.user{align-self:flex-end;flex-direction:row-reverse}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+        .msg .avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .msg.user .avatar{background:linear-gradient(135deg,var(--primary),var(--primary2))}
+        .msg.bot .avatar{background:linear-gradient(135deg,var(--success),#059669)}
+        .msg .bubble{padding:10px 14px;border-radius:var(--radius);line-height:1.65;font-size:15px;word-break:break-word;white-space:pre-wrap}
+        .msg.user .bubble{background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;border-bottom-right-radius:4px;max-width:calc(100% - 34px)}
+        .msg.bot .bubble{background:var(--bg2);color:var(--text);border-bottom-left-radius:4px;min-height:44px;border:1px solid var(--border)}
+        .msg.error .bubble{background:#2d1212;color:var(--danger);border:1px solid #7f1d1d}
+        .msg.thinking .bubble{background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:12px 16px;min-height:58px;border-bottom-left-radius:4px}
+        .think-dots{display:inline-flex;align-items:center;gap:6px}
+        .think-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:jump 1.4s ease-in-out infinite}
+        .think-dot:nth-child(2){animation-delay:.15s}
+        .think-dot:nth-child(3){animation-delay:.3s}
+        @keyframes jump{0%,60%,100%{transform:translateY(0);opacity:.35}30%{transform:translateY(-9px);opacity:1}}
+        .think-label{font-size:13px;color:var(--text2);margin-left:2px}
+        .input-area{flex-shrink:0;padding:10px 12px max(10px, env(safe-area-inset-bottom));background:var(--bg2);border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end}
+        textarea{flex:1;padding:11px 14px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-size:16px;resize:none;outline:none;line-height:1.5;max-height:120px;font-family:inherit;-webkit-appearance:none}
+        textarea:focus{border-color:var(--primary)}
+        .send-btn{padding:11px 18px;background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;cursor:pointer;font-weight:600;flex-shrink:0;box-shadow:0 2px 8px rgba(102,126,234,.3)}
+        .send-btn:active{transform:scale(.96);opacity:.85}
+        .send-btn:disabled{opacity:.35;cursor:not-allowed}
+        .send-btn.cancel{background:var(--danger);box-shadow:0 2px 8px rgba(239,68,68,.3)}
+        .md-content{font-size:15px;line-height:1.72;color:var(--text)}
+        .md-content h1,.md-content h2,.md-content h3{color:var(--accent);margin:10px 0 5px;font-weight:700}
+        .md-content h1{font-size:19px;border-bottom:1px solid var(--border);padding-bottom:5px}
+        .md-content h2{font-size:17px}
+        .md-content h3{font-size:15px}
+        .md-content p{margin:5px 0}
+        .md-content strong{color:#fff;font-weight:700}
+        .md-content em{color:#c4b5fd;font-style:italic}
+        .md-content code{background:#12122a;color:#fbbf24;padding:2px 6px;border-radius:4px;font-size:13px;font-family:monospace}
+        .md-content pre{background:#0d0d20;border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin:10px 0;overflow-x:auto}
+        .md-content pre code{background:none;color:var(--text);padding:0;font-size:13px}
+        .md-content ul,.md-content ol{margin:6px 0;padding-left:22px}
+        .md-content li{margin:3px 0}
+        .md-content blockquote{border-left:3px solid var(--primary);padding-left:12px;color:var(--text2);margin:8px 0;font-style:italic}
+        .md-content a{color:#818cf8}
+        @media(max-width:600px){select{max-width:150px;font-size:11px}.msg{max-width:95%}.msg .bubble{font-size:14px;padding:9px 12px}.msg .avatar{width:30px;height:30px}.header h1{font-size:15px}.login-screen h2{font-size:20px}}
+    </style>
 </head>
 <body>
+    <svg style="display:none">
+        <symbol id="icon-robot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16.01"/><line x1="16" y1="16" x2="16" y2="16.01"/><path d="M8 15h8"/></symbol>
+        <symbol id="icon-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></symbol>
+        <symbol id="icon-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    </svg>
 
-<svg style="display:none">
-  <symbol id="icon-robot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="3" y="11" width="18" height="10" rx="2"/>
-    <circle cx="12" cy="5" r="2"/>
-    <path d="M12 7v4"/>
-    <line x1="8" y1="16" x2="8" y2="16.01"/>
-    <line x1="16" y1="16" x2="16" y2="16.01"/>
-    <path d="M8 15h8"/>
-  </symbol>
-  <symbol id="icon-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <line x1="22" y1="2" x2="11" y2="13"/>
-    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-  </symbol>
-  <symbol id="icon-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-    <circle cx="12" cy="7" r="4"/>
-  </symbol>
-</svg>
-
-<div class="header" id="header" style="display:none">
-  <h1><svg width="20" height="20" fill="none" stroke="var(--accent)" stroke-width="1.8"><use href="#icon-robot"/></svg> AI Chat</h1>
-  <div style="display:flex;gap:8px;align-items:center">
-    <select id="modelSelect">
-      <option value="minimaxai/minimax-m3">MiniMax M3</option>
-      <option value="qwen/qwen3.5-122b-a10b">Qwen 3.5 122B</option>
-      <option value="z-ai/glm-5.1">GLM-5.1</option>
-      <option value="stepfun-ai/step-3.7-flash">Step 3.7 Flash</option>
-      <option value="meta/llama-4-maverick-17b-128e-instruct">Llama 4 Maverick</option>
-      <option value="meta/llama-3.3-70b-instruct">Llama 3.3 70B</option>
-      <option value="deepseek-ai/deepseek-v4-flash">DeepSeek V4 Flash</option>
-    </select>
-    <button class="logout-btn" onclick="logout()">退出</button>
-  </div>
-</div>
-
-<div class="status-bar" id="statusBar"></div>
-
-<div class="login-screen" id="loginScreen">
-  <div class="login-logo"><svg width="30" height="30" fill="none" stroke="#fff" stroke-width="1.8"><use href="#icon-robot"/></svg></div>
-  <h2>AI Chat</h2>
-  <p class="subtitle">NVIDIA NIM 中转</p>
-  <input type="password" id="pw" placeholder="输入访问密码" autocomplete="current-password">
-  <div class="login-error" id="loginError"></div>
-  <button class="login-btn" onclick="login()">进入</button>
-</div>
-
-<div class="chat-area" id="chatArea" style="display:none">
-  <div class="messages" id="messages">
-    <div class="msg bot">
-      <div class="avatar"><svg width="16" height="16" fill="none" stroke="#fff" stroke-width="1.8"><use href="#icon-robot"/></svg></div>
-      <div class="bubble"><div class="md-content">已连接。选择模型后开始聊天。</div></div>
+    <div class="header" id="header" style="display:none">
+        <h1><svg width="20" height="20" fill="none" stroke="var(--accent)" stroke-width="1.8"><use href="#icon-robot"/></svg> AI Chat</h1>
+        <div style="display:flex;gap:8px;align-items:center">
+            <select id="modelSelect">
+                <optgroup label="国产主力">
+                    <option value="deepseek-ai/deepseek-v4-flash">DeepSeek V4 Flash</option>
+                    <option value="deepseek-ai/deepseek-v4-pro">DeepSeek V4 Pro</option>
+                    <option value="deepseek-ai/deepseek-r1">DeepSeek R1</option>
+                    <option value="moonshotai/kimi-k2.6">Kimi K2.6</option>
+                    <option value="z-ai/glm-5.1">GLM-5.1</option>
+                    <option value="z-ai/glm-5.2">GLM-5.2</option>
+                    <option value="minimaxai/minimax-m2.7">MiniMax M2.7</option>
+                    <option value="minimaxai/minimax-m3">MiniMax M3</option>
+                    <option value="stepfun-ai/step-3.7-flash">Step 3.7 Flash</option>
+                    <option value="stepfun-ai/step-3.5-flash">Step 3.5 Flash</option>
+                    <option value="qwen/qwen3.5-122b-a10b">Qwen3.5 122B-A10B</option>
+                    <option value="qwen/qwen3.5-397b-a17b">Qwen3.5 397B-A17B</option>
+                    <option value="qwen/qwen3-next-80b-a3b-instruct">Qwen3-Next 80B-A3B</option>
+                </optgroup>
+                <optgroup label="国际通用">
+                    <option value="mistral-large-3-675b-instruct-2512">Mistral Large 3 (675B)</option>
+                    <option value="mistral-small-4-119b-2603">Mistral Small 4 (119B)</option>
+                    <option value="mistral-medium-3.5-128b">Mistral Medium 3.5 (128B)</option>
+                    <option value="mixtral-8x7b-instruct-v0.1">Mixtral 8x7B Instruct</option>
+                    <option value="meta/llama-4-maverick-17b-128e-instruct">Llama 4 Maverick 17B</option>
+                    <option value="meta/llama-3.3-70b-instruct">Llama 3.3 70B</option>
+                    <option value="google/gemma-4-31b-it">Gemma 4 31B IT</option>
+                    <option value="google/diffusiongemma-26b-a4b-it">Diffusion Gemma 26B</option>
+                    <option value="microsoft/phi-4-mini-instruct">Phi-4 Mini Instruct</option>
+                    <option value="openai/gpt-oss-20b">GPT-OSS 20B</option>
+                    <option value="openai/gpt-oss-120b">GPT-OSS 120B</option>
+                </optgroup>
+                <optgroup label="NVIDIA Nemotron">
+                    <option value="nvidia/nemotron-3-ultra-550b-a55b">Nemotron Ultra 550B</option>
+                    <option value="nvidia/nemotron-3-super-120b-a12b">Nemotron Super 120B</option>
+                    <option value="nvidia/nemotron-3-nano-30b-a3b">Nemotron Nano 30B</option>
+                    <option value="nvidia/nemotron-3-nano-omni-30b-a3b-reasoning">Nemotron Omni Nano 30B</option>
+                    <option value="nvidia/nemotron-mini-4b-instruct">Nemotron Mini 4B</option>
+                    <option value="nvidia/nemotron-nano-9b-v2">Nemotron Nano 9B v2</option>
+                    <option value="nvidia/nemotron-nano-12b-v2-vl">Nemotron Nano 12B v2 VL</option>
+                    <option value="nvidia/seed-oss-36b-instruct">SEED-OSS 36B</option>
+                </optgroup>
+                <optgroup label="专用模型">
+                    <option value="nvidia/cosmos3-nano">Cosmos3 Nano (视频生成)</option>
+                    <option value="nvidia/cosmos3-nano-reasoner">Cosmos3 Nano Reasoner</option>
+                    <option value="nvidia/nemotron-voicechat">Nemotron VoiceChat</option>
+                    <option value="nvidia/nemotron-3.5-content-safety">Content Safety</option>
+                    <option value="nvidia/synthetic-video-detector">合成视频检测</option>
+                    <option value="nvidia/ising-calibration-1-35b-a3b">Ising Calibration 35B</option>
+                    <option value="resemble.ai/chatterbox-multilingual-tts">Chatterbox TTS (23语)</option>
+                    <option value="stockmark/stockmark-2-100b-instruct">Stockmark 2 100B (日语)</option>
+                </optgroup>
+            </select>
+            <button class="logout-btn" onclick="logout()">退出</button>
+        </div>
     </div>
-  </div>
-  <div class="input-area">
-    <textarea id="input" rows="1" placeholder="输入消息..."></textarea>
-    <button class="send-btn" id="sendBtn" onclick="send()"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><use href="#icon-send"/></svg></button>
-  </div>
-</div>
 
-<script>
-var API = "https://ai.tszxzy.dpdns.org";
-var token = localStorage.getItem("ai_token");
-var loading = false, abortCtrl = null;
-var msgs = document.getElementById("messages"),
-    input = document.getElementById("input");
-var sendBtn = document.getElementById("sendBtn"),
-    statusBar = document.getElementById("statusBar");
+    <div class="status-bar" id="statusBar"></div>
 
-function setStatus(t, a) {
-  statusBar.textContent = t;
-  statusBar.className = "status-bar" + (a ? " active" : "");
-}
+    <div class="login-screen" id="loginScreen">
+        <div class="login-logo"><svg width="30" height="30" fill="none" stroke="#fff" stroke-width="1.8"><use href="#icon-robot"/></svg></div>
+        <h2>AI Chat</h2>
+        <p class="subtitle">NVIDIA NIM 中转 · 40+ 模型</p>
+        <input type="password" id="pw" placeholder="输入访问密码" autocomplete="current-password" />
+        <div class="login-error" id="loginError"></div>
+        <button class="login-btn" onclick="login()">进入</button>
+    </div>
 
-input.addEventListener("input", function() {
-  input.style.height = "auto";
-  input.style.height = Math.min(input.scrollHeight, 120) + "px";
-});
-input.addEventListener("keydown", function(e) {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    send();
-  }
-});
+    <div class="chat-area" id="chatArea" style="display:none">
+        <div class="messages" id="messages">
+            <div class="msg bot">
+                <div class="avatar"><svg width="16" height="16" fill="none" stroke="#fff" stroke-width="1.8"><use href="#icon-robot"/></svg></div>
+                <div class="bubble"><div class="md-content">已连接。选择模型后开始聊天。</div></div>
+            </div>
+        </div>
+        <div class="input-area">
+            <textarea id="input" rows="1" placeholder="输入消息..."></textarea>
+            <button class="send-btn" id="sendBtn" onclick="send()"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><use href="#icon-send"/></svg></button>
+        </div>
+    </div>
 
-function esc(t) {
-  var d = document.createElement("div");
-  d.textContent = t;
-  return d.innerHTML;
-}
+    <script>
+        var API = "https://ai.tszxzy.dpdns.org";
+        var token = localStorage.getItem("ai_token");
+        var loading = false, abortCtrl = null;
+        var msgs = document.getElementById("messages"), input = document.getElementById("input");
+        var sendBtn = document.getElementById("sendBtn"), statusBar = document.getElementById("statusBar");
 
-function addMsg(role, content, cls) {
-  var div = document.createElement("div");
-  div.className = "msg " + role + (cls ? " " + cls : "");
-  var icon = {
-    user: '<svg width="14" height="14" fill="none" stroke="#fff" stroke-width="1.8"><use href="#icon-user"/></svg>',
-    bot: '<svg width="14" height="14" fill="none" stroke="#fff" stroke-width="1.8"><use href="#icon-robot"/></svg>'
-  }[role];
-  var inner = (role === "bot" && cls !== "thinking") ?
-    '<div class="md-content">' + MARKED(esc(content)) + '</div>' :
-    esc(content);
-  div.innerHTML = '<div class="avatar">' + icon + '</div><div class="bubble">' + inner + '</div>';
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
-  return div;
-}
+        function setStatus(t, a) { statusBar.textContent = t; statusBar.className = "status-bar" + (a ? " active" : ""); }
 
-function addThinking() {
-  var div = document.createElement("div");
-  div.className = "msg bot thinking";
-  div.innerHTML = '<div class="avatar"><svg width="14" height="14" fill="none" stroke="#fff" stroke-width="1.8"><use href="#icon-robot"/></svg></div>' +
-    '<div class="bubble"><div class="think-dots"><div class="think-dot"></div><div class="think-dot"></div><div class="think-dot"></div></div>' +
-    '<span class="think-label">思考中...</span></div>';
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
-  return div;
-}
-
-function login() {
-  var pwd = document.getElementById("pw").value.trim();
-  if (!pwd) return;
-  document.getElementById("loginError").style.display = "none";
-  setStatus("登录中...", true);
-  fetch(API + "/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password: pwd })
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(d) {
-      if (d && d.token) {
-        token = d.token;
-        localStorage.setItem("ai_token", token);
-        document.getElementById("loginScreen").style.display = "none";
-        document.getElementById("chatArea").style.display = "flex";
-        document.getElementById("header").style.display = "flex";
-        setStatus("已连接", false);
-      } else {
-        setStatus("");
-        var e = document.getElementById("loginError");
-        e.textContent = "密码错误";
-        e.style.display = "block";
-      }
-    })
-    .catch(function(e) {
-      setStatus("");
-      var el = document.getElementById("loginError");
-      el.textContent = "连接失败: " + e.message;
-      el.style.display = "block";
-    });
-}
-
-document.getElementById("pw").addEventListener("keydown", function(e) {
-  if (e.key === "Enter") login();
-});
-
-function logout() {
-  localStorage.removeItem("ai_token");
-  location.reload();
-}
-
-function send() {
-  if (loading) {
-    if (abortCtrl) abortCtrl.abort();
-    loading = false;
-    sendBtn.classList.remove("cancel");
-    setStatus("已停止", false);
-    return;
-  }
-  var text = input.value.trim();
-  if (!text) return;
-  input.value = "";
-  input.style.height = "auto";
-  addMsg("user", text);
-  loading = true;
-  sendBtn.classList.add("cancel");
-  setStatus("思考中...", true);
-
-  var thinkDiv = addThinking();
-  var botDiv = addMsg("bot", "");
-  var bubble = botDiv.querySelector(".bubble");
-  bubble.innerHTML = '<div class="md-content"></div>';
-  var mdDiv = bubble.firstElementChild;
-
-  abortCtrl = new AbortController();
-  var content = "";
-
-  fetch(API + "/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + token
-      },
-      body: JSON.stringify({
-        model: document.getElementById("modelSelect").value,
-        messages: [{ role: "user", content: text }],
-        max_tokens: 2048,
-        stream: true
-      }),
-      signal: abortCtrl.signal
-    })
-    .then(function(res) {
-      thinkDiv.remove();
-      if (!res.ok) {
-        res.json().catch(function() {}).then(function(d) {
-          mdDiv.innerHTML = "错误: " + esc(d && d.error && d.error.message || "HTTP " + res.status);
-          botDiv.classList.add("error");
-          setStatus("失败", false);
+        input.addEventListener("input", function() {
+            input.style.height = "auto";
+            input.style.height = Math.min(input.scrollHeight, 120) + "px";
         });
-        finish();
-        return;
-      }
-      setStatus("正在打字...", true);
-      var reader = res.body.getReader(),
-        decoder = new TextDecoder(),
-        buffer = "";
-
-      function pump() {
-        reader.read().then(function(r) {
-          if (r.done) {
-            if (!content) mdDiv.innerHTML = "(无回复)";
-            setStatus("", false);
-            finish();
-            return;
-          }
-          buffer += decoder.decode(r.value, { stream: true });
-          var lines = buffer.split("\n");
-          buffer = lines.pop() || "";
-          for (var i = 0; i < lines.length; i++) {
-            if (!lines[i].startsWith("data: ")) continue;
-            var data = lines[i].slice(6).trim();
-            if (data === "[DONE]") continue;
-            try {
-              var obj = JSON.parse(data);
-              var delta = obj.choices && obj.choices[0] && obj.choices[0].delta && obj.choices[0].delta.content;
-              if (delta) {
-                content += delta;
-                mdDiv.innerHTML = MARKED(esc(content));
-                msgs.scrollTop = msgs.scrollHeight;
-              }
-            } catch (e) {}
-          }
-          pump();
-        }).catch(function(e) {
-          if (e.name !== "AbortError") {
-            mdDiv.innerHTML = "网络错误: " + esc(e.message);
-            botDiv.classList.add("error");
-            setStatus("出错", false);
-          }
-          finish();
+        input.addEventListener("keydown", function(e) {
+            if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
         });
-      }
-      pump();
-    })
-    .catch(function(e) {
-      thinkDiv.remove();
-      if (e.name !== "AbortError") {
-        mdDiv.innerHTML = "网络错误: " + esc(e.message);
-        botDiv.classList.add("error");
-        setStatus("出错", false);
-      } else {
-        setStatus("已停止", false);
-      }
-      finish();
-    });
-}
 
-function finish() {
-  loading = false;
-  sendBtn.disabled = false;
-  sendBtn.classList.remove("cancel");
-}
+        function esc(t) { var d = document.createElement("div"); d.textContent = t; return d.innerHTML; }
 
-// ===== 简易 Markdown 解析器 =====
-var MARKED = function() {
-  function esc(s) {
-    return String(s).replace(/[&<>"']/g, function(c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  }
-
-  function inline(s) {
-    return s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/`(.+?)`/g, '<code>$1</code>')
-      .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
-      .replace(/_(.+?)_/g, '<em>$1</em>')
-      .replace(/~~(.+?)~~/g, '<del>$1</del>');
-  }
-
-  function parse(src) {
-    src = src.replace(/\r\n?/g, '\n');
-    var out = [],
-      lines = src.split('\n'),
-      i = 0,
-      cur = [];
-
-    function flush() {
-      if (cur.length) out.push({ t: 'p', c: inline(cur.join(' ')) });
-      cur = [];
-    }
-
-    while (i < lines.length) {
-      var ln = lines[i];
-      if (ln === '') { flush(); while (i < lines.length && lines[i] === '') i++; continue; }
-      var h = ln.match(/^(#{1,6})\s+(.*)$/);
-      if (h) { flush(); out.push({ t: 'h', l: h[1].length, c: inline(h[2]) }); i++; continue; }
-      if (ln.startsWith('    ')) {
-        flush();
-        var c = [];
-        while (i < lines.length && lines[i].startsWith('    ')) { c.push(lines[i].slice(4)); i++; }
-        out.push({ t: 'code', lang: '', c: c.join('\n') });
-        continue;
-      }
-      var ul = ln.match(/^(\s*)[-+]\s+(.*)$/);
-      if (ul) {
-        flush();
-        var items = [];
-        while (i < lines.length && lines[i].match(/^(\s*)[-+]\s+/)) {
-          var m = lines[i].match(/^(\s*)[-+]\s+(.*)$/);
-          if (!m) break;
-          items.push({ text: inline(m[2]) });
-          i++;
+        function addMsg(role, content, cls) {
+            var div = document.createElement("div");
+            div.className = "msg " + role + (cls ? " " + cls : "");
+            var icon = {
+                user: '<svg width="14" height="14" fill="none" stroke="#fff" stroke-width="1.8"><use href="#icon-user"/></svg>',
+                bot: '<svg width="14" height="14" fill="none" stroke="#fff" stroke-width="1.8"><use href="#icon-robot"/></svg>'
+            }[role];
+            var inner = (role === "bot" && cls !== "thinking") ? '<div class="md-content">' + MARKED(esc(content)) + '</div>' : esc(content);
+            div.innerHTML = '<div class="avatar">' + icon + '</div><div class="bubble">' + inner + '</div>';
+            msgs.appendChild(div);
+            msgs.scrollTop = msgs.scrollHeight;
+            return div;
         }
-        out.push({ t: 'ul', items: items });
-        continue;
-      }
-      var ol = ln.match(/^\s*(\d+)\.\s+(.*)$/);
-      if (ol) {
-        flush();
-        var items = [];
-        while (i < lines.length && lines[i].match(/^\s*\d+\.\s+/)) {
-          var m = lines[i].match(/^\s*(\d+)\.\s+(.*)$/);
-          if (!m) break;
-          items.push(inline(m[2]));
-          i++;
+
+        function addThinking() {
+            var div = document.createElement("div");
+            div.className = "msg bot thinking";
+            div.innerHTML = '<div class="avatar"><svg width="14" height="14" fill="none" stroke="#fff" stroke-width="1.8"><use href="#icon-robot"/></svg></div><div class="bubble"><div class="think-dots"><div class="think-dot"></div><div class="think-dot"></div><div class="think-dot"></div></div><span class="think-label">思考中...</span></div>';
+            msgs.appendChild(div);
+            msgs.scrollTop = msgs.scrollHeight;
+            return div;
         }
-        out.push({ t: 'ol', items: items });
-        continue;
-      }
-      if (ln.startsWith('> ')) {
-        flush();
-        var q = [];
-        while (i < lines.length && lines[i].startsWith('> ')) { q.push(lines[i].slice(2)); i++; }
-        out.push({ t: 'blockquote', c: inline(q.join(' ')) });
-        continue;
-      }
-      if (ln.match(/^---+$/)) { flush(); out.push({ t: 'hr' }); i++; continue; }
-      cur.push(ln);
-      i++;
-    }
-    flush();
-    return out;
-  }
 
-  function render(tokens) {
-    var html = '';
-    for (var i = 0; i < tokens.length; i++) {
-      var t = tokens[i];
-      if (t.t === 'h') html += '<h' + t.l + '>' + t.c + '</h' + t.l + '>';
-      else if (t.t === 'p') html += '<p>' + t.c + '</p>';
-      else if (t.t === 'code') html += '<pre><code>' + esc(t.c) + '</code></pre>';
-      else if (t.t === 'ul') {
-        html += '<ul>';
-        for (var j = 0; j < t.items.length; j++) html += '<li>' + t.items[j].text + '</li>';
-        html += '</ul>';
-      } else if (t.t === 'ol') {
-        html += '<ol>';
-        for (var j = 0; j < t.items.length; j++) html += '<li>' + t.items[j] + '</li>';
-        html += '</ol>';
-      } else if (t.t === 'blockquote') html += '<blockquote>' + t.c + '</blockquote>';
-      else if (t.t === 'hr') html += '<hr>';
-    }
-    return html;
-  }
+        function login() {
+            var pwd = document.getElementById("pw").value.trim();
+            if (!pwd) return;
+            document.getElementById("loginError").style.display = "none";
+            setStatus("登录中...", true);
+            fetch(API + "/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ password: pwd })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                if (d && d.token) {
+                    token = d.token;
+                    localStorage.setItem("ai_token", token);
+                    document.getElementById("loginScreen").style.display = "none";
+                    document.getElementById("chatArea").style.display = "flex";
+                    document.getElementById("header").style.display = "flex";
+                    setStatus("已连接", false);
+                } else {
+                    setStatus("");
+                    var el = document.getElementById("loginError");
+                    el.textContent = "密码错误";
+                    el.style.display = "block";
+                }
+            })
+            .catch(function(e) {
+                setStatus("");
+                var el = document.getElementById("loginError");
+                el.textContent = "连接失败: " + e.message;
+                el.style.display = "block";
+            });
+        }
 
-  return function(src) { return render(parse(src || '')); };
-}();
+        document.getElementById("pw").addEventListener("keydown", function(e) { if (e.key === "Enter") login(); });
 
-if (token) {
-  document.getElementById("loginScreen").style.display = "none";
-  document.getElementById("chatArea").style.display = "flex";
-  document.getElementById("header").style.display = "flex";
-  setStatus("就绪", false);
-}
-</script>
+        function logout() { localStorage.removeItem("ai_token"); location.reload(); }
+
+        function send() {
+            if (loading) {
+                if (abortCtrl) abortCtrl.abort();
+                loading = false;
+                sendBtn.classList.remove("cancel");
+                setStatus("已停止", false);
+                return;
+            }
+            var text = input.value.trim();
+            if (!text) return;
+            input.value = "";
+            input.style.height = "auto";
+            addMsg("user", text);
+            loading = true;
+            sendBtn.classList.add("cancel");
+            setStatus("思考中...", true);
+            var thinkDiv = addThinking();
+            var botDiv = addMsg("bot", "");
+            var bubble = botDiv.querySelector(".bubble");
+            bubble.innerHTML = '<div class="md-content"></div>';
+            var mdDiv = bubble.firstElementChild;
+            abortCtrl = new AbortController();
+            var content = "";
+
+            fetch(API + "/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token
+                },
+                body: JSON.stringify({
+                    model: document.getElementById("modelSelect").value,
+                    messages: [{ role: "user", content: text }],
+                    max_tokens: 2048,
+                    stream: true
+                }),
+                signal: abortCtrl.signal
+            })
+            .then(function(res) {
+                thinkDiv.remove();
+                if (!res.ok) {
+                    res.json().catch(function() {}).then(function(d) {
+                        mdDiv.innerHTML = "错误: " + esc(d && d.error && d.error.message || "HTTP " + res.status);
+                        botDiv.classList.add("error");
+                        setStatus("失败 HTTP " + res.status, false);
+                    });
+                    finish();
+                    return;
+                }
+                setStatus("正在打字...", true);
+                var reader = res.body.getReader(),
+                    decoder = new TextDecoder(),
+                    buffer = "";
+
+                function pump() {
+                    reader.read().then(function(r) {
+                        if (r.done) {
+                            if (!content) mdDiv.innerHTML = "(无回复)";
+                            setStatus("", false);
+                            finish();
+                            return;
+                        }
+                        buffer += decoder.decode(r.value, { stream: true });
+                        var lines = buffer.split("\n");
+                        buffer = lines.pop() || "";
+                        for (var i = 0; i < lines.length; i++) {
+                            if (!lines[i].startsWith("data: ")) continue;
+                            var data = lines[i].slice(6).trim();
+                            if (data === "[DONE]") continue;
+                            try {
+                                var obj = JSON.parse(data);
+                                var delta = obj.choices && obj.choices[0] && obj.choices[0].delta && obj.choices[0].delta.content;
+                                if (delta) {
+                                    content += delta;
+                                    mdDiv.innerHTML = MARKED(esc(content));
+                                    msgs.scrollTop = msgs.scrollHeight;
+                                }
+                            } catch (e) {}
+                        }
+                        pump();
+                    }).catch(function(e) {
+                        if (e.name !== "AbortError") {
+                            mdDiv.innerHTML = "网络错误: " + esc(e.message);
+                            botDiv.classList.add("error");
+                            setStatus("出错", false);
+                        }
+                        finish();
+                    });
+                }
+                pump();
+            })
+            .catch(function(e) {
+                thinkDiv.remove();
+                if (e.name !== "AbortError") {
+                    mdDiv.innerHTML = "网络错误: " + esc(e.message);
+                    botDiv.classList.add("error");
+                    setStatus("出错", false);
+                } else {
+                    setStatus("已停止", false);
+                }
+                finish();
+            });
+        }
+
+        function finish() { loading = false; sendBtn.disabled = false; sendBtn.classList.remove("cancel"); }
+
+        // Markdown 简易解析器（自包含）
+        var MARKED = (function() {
+            function esc(s) {
+                return String(s).replace(/[&<>"']/g, function(c) {
+                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+                });
+            }
+            function inline(s) {
+                return s.replace(/\`([^`]+)\`/g, '<code>$1</code>')
+                        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+                        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+                        .replace(/~~([^~]+)~~/g, '<del>$1</del>');
+            }
+            function parse(src) {
+                src = src.replace(/\r\n?/g, '\n');
+                var out = [], lines = src.split('\n'), i = 0, cur = [];
+                function flush() { if (cur.length) out.push({ t: 'p', c: inline(cur.join(' ')) }); cur = []; }
+                while (i < lines.length) {
+                    var ln = lines[i];
+                    if (ln === '') { flush(); while (i < lines.length && lines[i] === '') i++; continue; }
+                    var h = ln.match(/^(#{1,6})\s+(.+)$/);
+                    if (h) { flush(); out.push({ t: 'h', l: h[1].length, c: inline(h[2]) }); i++; continue; }
+                    if (ln.startsWith('    ')) {
+                        flush();
+                        var code = [];
+                        while (i < lines.length && lines[i].startsWith('    ')) { code.push(lines[i].slice(4)); i++; }
+                        out.push({ t: 'code', lang: '', c: code.join('\n') });
+                        continue;
+                    }
+                    var ul = ln.match(/^(\s*)[-+]\s+(.+)$/);
+                    if (ul) {
+                        flush();
+                        var items = [];
+                        while (i < lines.length && lines[i].match(/^(\s*)[-+]\s+/)) {
+                            var m = lines[i].match(/^(\s*)[-+]\s+(.*)$/);
+                            if (!m) break;
+                            items.push({ text: inline(m[2]) });
+                            i++;
+                        }
+                        out.push({ t: 'ul', items: items });
+                        continue;
+                    }
+                    var ol = ln.match(/^\s*(\d+)\.\s+(.+)$/);
+                    if (ol) {
+                        flush();
+                        var oitems = [];
+                        while (i < lines.length && lines[i].match(/^\s*(\d+)\.\s+/)) {
+                            var m = lines[i].match(/^\s*(\d+)\.\s+(.*)$/);
+                            if (!m) break;
+                            oitems.push(inline(m[2]));
+                            i++;
+                        }
+                        out.push({ t: 'ol', items: oitems });
+                        continue;
+                    }
+                    if (ln.startsWith('> ')) {
+                        flush();
+                        var quotes = [];
+                        while (i < lines.length && lines[i].startsWith('> ')) {
+                            quotes.push(lines[i].slice(2));
+                            i++;
+                        }
+                        out.push({ t: 'blockquote', c: inline(quotes.join(' ')) });
+                        continue;
+                    }
+                    if (ln.match(/^[-*_]{3,}$/)) { flush(); out.push({ t: 'hr' }); i++; continue; }
+                    cur.push(ln);
+                    i++;
+                }
+                flush();
+                return out;
+            }
+            function render(tokens) {
+                var html = '';
+                for (var i = 0; i < tokens.length; i++) {
+                    var t = tokens[i];
+                    if (t.t === 'h') html += '<h' + t.l + '>' + t.c + '</h' + t.l + '>';
+                    else if (t.t === 'p') html += '<p>' + t.c + '</p>';
+                    else if (t.t === 'code') html += '<pre><code>' + esc(t.c) + '</code></pre>';
+                    else if (t.t === 'ul') {
+                        html += '<ul>';
+                        for (var j = 0; j < t.items.length; j++) html += '<li>' + t.items[j].text + '</li>';
+                        html += '</ul>';
+                    } else if (t.t === 'ol') {
+                        html += '<ol>';
+                        for (var j = 0; j < t.items.length; j++) html += '<li>' + t.items[j] + '</li>';
+                        html += '</ol>';
+                    } else if (t.t === 'blockquote') html += '<blockquote>' + t.c + '</blockquote>';
+                    else if (t.t === 'hr') html += '<hr>';
+                }
+                return html;
+            }
+            return function(src) { return render(parse(src || '')); };
+        })();
+
+        if (token) {
+            document.getElementById("loginScreen").style.display = "none";
+            document.getElementById("chatArea").style.display = "flex";
+            document.getElementById("header").style.display = "flex";
+            setStatus("就绪", false);
+        }
+    </script>
 </body>
 </html>
